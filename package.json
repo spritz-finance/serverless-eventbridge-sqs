@@ -1,7 +1,7 @@
 {
-  "name": "@agiledigital/serverless-sns-sqs-lambda",
+  "name": "@agiledigital/serverless-eventbridge-sqs-lambda",
   "version": "2.0.1",
-  "description": "serverless plugin to make serverless-sns-sqs-lambda events",
+  "description": "serverless plugin to make serverless-eventbridge-sqs-lambda events",
   "main": "dist/index.js",
   "scripts": {
     "test": "yarn build && eslint lib/**/*.ts && jest --clearCache lib && jest --runInBand lib integration-tests",
@@ -42,6 +42,8 @@
     "commitizen": "^4.1.2",
     "cz-conventional-changelog": "^3.2.0",
     "eslint": "^7.12.1",
+    "eslint-config-prettier": "^6.10.0",
+    "eslint-plugin-prettier": "^3.1.2",
     "jest": "^26.3.0",
     "prettier": "^2.1.2",
     "semantic-release": "^19.0.2",

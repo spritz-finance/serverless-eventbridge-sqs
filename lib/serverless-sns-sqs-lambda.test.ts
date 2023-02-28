@@ -3,7 +3,7 @@
 import CLI from "serverless/lib/classes/cli";
 import Serverless from "serverless/lib/serverless";
 import AwsProvider from "serverless/lib/plugins/aws/provider";
-import ServerlessSnsSqsLambda from "./serverless-sns-sqs-lambda";
+import ServerlesseventBridgeSqsLambda from "./serverless-sns-sqs-lambda";
 // See https://github.com/serverless/test/blob/71746cd0e0c897de50e19bc96a3968e5f26bee4f/docs/run-serverless.md for more info on run-serverless
 import runServerless from "@serverless/test/run-serverless";
 import { join } from "path";
@@ -68,7 +68,7 @@ const generateIamLambdaExecutionRole = () => ({
 
 describe("Test Serverless SNS SQS Lambda", () => {
   let serverless;
-  let serverlessSnsSqsLambda;
+  let serverlesseventBridgeSqsLambda;
 
   afterEach(() => {
     jest.resetModules(); // reset modules after each test
@@ -109,8 +109,8 @@ describe("Test Serverless SNS SQS Lambda", () => {
                 handler: "handler.handler",
                 events: [
                   {
-                    snsSqs: {
-                      topicArn: "arn:aws:sns:us-east-2:123456789012:MyTopic",
+                    eventBridgeSqs: {
+                      eventBusArn: "arn:aws:sns:us-east-2:123456789012:MyTopic",
                       name: undefined
                     }
                   }
@@ -120,13 +120,13 @@ describe("Test Serverless SNS SQS Lambda", () => {
           }
         })
       ).rejects.toMatchInlineSnapshot(`
-              [ServerlessError: Configuration error at 'functions.processEvent.events.0.snsSqs': must have required property 'name'
+              [ServerlessError: Configuration error at 'functions.processEvent.events.0.eventBridgeSqs': must have required property 'name'
 
               Learn more about configuration validation here: http://slss.io/configuration-validation]
             `);
     });
 
-    it("should fail if topicArn is not passed", async () => {
+    it("should fail if eventBusArn is not passed", async () => {
       expect.assertions(1);
 
       await expect(() =>
@@ -139,8 +139,8 @@ describe("Test Serverless SNS SQS Lambda", () => {
                 handler: "handler.handler",
                 events: [
                   {
-                    snsSqs: {
-                      topicArn: undefined,
+                    eventBridgeSqs: {
+                      eventBusArn: undefined,
                       name: "some name"
                     }
                   }
@@ -150,13 +150,13 @@ describe("Test Serverless SNS SQS Lambda", () => {
           }
         })
       ).rejects.toMatchInlineSnapshot(`
-              [ServerlessError: Configuration error at 'functions.processEvent.events.0.snsSqs': must have required property 'topicArn'
+              [ServerlessError: Configuration error at 'functions.processEvent.events.0.eventBridgeSqs': must have required property 'eventBusArn'
 
               Learn more about configuration validation here: http://slss.io/configuration-validation]
             `);
     });
 
-    it("should fail if topicArn is invalid", async () => {
+    it("should fail if eventBusArn is invalid", async () => {
       expect.assertions(1);
 
       await expect(() =>
@@ -169,8 +169,8 @@ describe("Test Serverless SNS SQS Lambda", () => {
                 handler: "handler.handler",
                 events: [
                   {
-                    snsSqs: {
-                      topicArn: "not_an_arn",
+                    eventBridgeSqs: {
+                      eventBusArn: "not_an_arn",
                       name: "some name"
                     }
                   }
@@ -180,7 +180,7 @@ describe("Test Serverless SNS SQS Lambda", () => {
           }
         })
       ).rejects.toMatchInlineSnapshot(`
-              [ServerlessError: Configuration error at 'functions.processEvent.events.0.snsSqs.topicArn': unsupported string format
+              [ServerlessError: Configuration error at 'functions.processEvent.events.0.eventBridgeSqs.eventBusArn': unsupported string format
 
               Learn more about configuration validation here: http://slss.io/configuration-validation]
             `);
@@ -197,9 +197,9 @@ describe("Test Serverless SNS SQS Lambda", () => {
                 handler: "handler.handler",
                 events: [
                   {
-                    snsSqs: {
+                    eventBridgeSqs: {
                       name: "some-name",
-                      topicArn: "arn:aws:sns:us-east-2:123456789012:MyTopic"
+                      eventBusArn: "arn:aws:sns:us-east-2:123456789012:MyTopic"
                     }
                   }
                 ]
@@ -231,9 +231,9 @@ describe("Test Serverless SNS SQS Lambda", () => {
                 handler: "handler.handler",
                 events: [
                   {
-                    snsSqs: {
+                    eventBridgeSqs: {
                       name: "some-name",
-                      topicArn: "arn:aws:sns:us-east-2:123456789012:MyTopic",
+                      eventBusArn: "arn:aws:sns:us-east-2:123456789012:MyTopic",
                       batchSize: 7,
                       maximumBatchingWindowInSeconds: 99,
                       prefix: "some prefix",
@@ -244,7 +244,7 @@ describe("Test Serverless SNS SQS Lambda", () => {
                       enabled: false,
                       visibilityTimeout: 999,
                       rawMessageDelivery: true,
-                      filterPolicy: { pet: ["dog", "cat"] }
+                      pattern: { pet: ["dog", "cat"] }
                     }
                   }
                 ]
@@ -276,9 +276,9 @@ describe("Test Serverless SNS SQS Lambda", () => {
                 handler: "handler.handler",
                 events: [
                   {
-                    snsSqs: {
+                    eventBridgeSqs: {
                       name: "some-name",
-                      topicArn: "arn:aws:sns:us-east-2:123456789012:MyTopic",
+                      eventBusArn: "arn:aws:sns:us-east-2:123456789012:MyTopic",
                       prefix: "some prefix",
                       maxRetryCount: 4
                     }
@@ -312,9 +312,9 @@ describe("Test Serverless SNS SQS Lambda", () => {
                 handler: "handler.handler",
                 events: [
                   {
-                    snsSqs: {
+                    eventBridgeSqs: {
                       name: "some-name",
-                      topicArn: "arn:aws:sns:us-east-2:123456789012:MyTopic",
+                      eventBusArn: "arn:aws:sns:us-east-2:123456789012:MyTopic",
                       prefix: "some prefix",
                       maxRetryCount: 4,
                       enabled: true,
@@ -364,9 +364,9 @@ describe("Test Serverless SNS SQS Lambda", () => {
                 handler: "handler.handler",
                 events: [
                   {
-                    snsSqs: {
+                    eventBridgeSqs: {
                       name: "some-name",
-                      topicArn: "arn:aws:sns:us-east-2:123456789012:MyTopic",
+                      eventBusArn: "arn:aws:sns:us-east-2:123456789012:MyTopic",
                       fifo: true
                     }
                   }
@@ -406,9 +406,9 @@ describe("Test Serverless SNS SQS Lambda", () => {
                 handler: "handler.handler",
                 events: [
                   {
-                    snsSqs: {
+                    eventBridgeSqs: {
                       name: "some-name",
-                      topicArn: "arn:aws:sns:us-east-2:123456789012:MyTopic"
+                      eventBusArn: "arn:aws:sns:us-east-2:123456789012:MyTopic"
                     }
                   }
                 ]
@@ -445,7 +445,10 @@ describe("Test Serverless SNS SQS Lambda", () => {
       serverless.setProvider("aws", provider);
 
       serverless.cli = new CLI(serverless);
-      serverlessSnsSqsLambda = new ServerlessSnsSqsLambda(serverless, options);
+      serverlesseventBridgeSqsLambda = new ServerlesseventBridgeSqsLambda(
+        serverless,
+        options
+      );
     });
 
     describe("when no optional parameters are provided", () => {
@@ -457,21 +460,27 @@ describe("Test Serverless SNS SQS Lambda", () => {
         };
         const testConfig = {
           name: "some-name",
-          topicArn: "arn:aws:sns:us-east-2:123456789012:MyTopic"
+          eventBusArn: "arn:aws:sns:us-east-2:123456789012:MyTopic"
         };
-        const validatedConfig = serverlessSnsSqsLambda.validateConfig(
+        const validatedConfig = serverlesseventBridgeSqsLambda.validateConfig(
           "test-function",
-          serverlessSnsSqsLambda.stage,
+          serverlesseventBridgeSqsLambda.stage,
           testConfig
         );
-        serverlessSnsSqsLambda.addEventQueue(template, validatedConfig);
-        serverlessSnsSqsLambda.addEventDeadLetterQueue(
+        serverlesseventBridgeSqsLambda.addEventQueue(template, validatedConfig);
+        serverlesseventBridgeSqsLambda.addEventDeadLetterQueue(
           template,
           validatedConfig
         );
-        serverlessSnsSqsLambda.addEventSourceMapping(template, validatedConfig);
-        serverlessSnsSqsLambda.addTopicSubscription(template, validatedConfig);
-        serverlessSnsSqsLambda.addLambdaSqsPermissions(
+        serverlesseventBridgeSqsLambda.addEventSourceMapping(
+          template,
+          validatedConfig
+        );
+        serverlesseventBridgeSqsLambda.addTopicSubscription(
+          template,
+          validatedConfig
+        );
+        serverlesseventBridgeSqsLambda.addLambdaSqsPermissions(
           template,
           validatedConfig
         );
@@ -489,22 +498,28 @@ describe("Test Serverless SNS SQS Lambda", () => {
         };
         const testConfig = {
           name: "some-name",
-          topicArn: "arn:aws:sns:us-east-2:123456789012:MyTopic",
+          eventBusArn: "arn:aws:sns:us-east-2:123456789012:MyTopic",
           fifo: true
         };
-        const validatedConfig = serverlessSnsSqsLambda.validateConfig(
+        const validatedConfig = serverlesseventBridgeSqsLambda.validateConfig(
           "test-function",
-          serverlessSnsSqsLambda.stage,
+          serverlesseventBridgeSqsLambda.stage,
           testConfig
         );
-        serverlessSnsSqsLambda.addEventQueue(template, validatedConfig);
-        serverlessSnsSqsLambda.addEventDeadLetterQueue(
+        serverlesseventBridgeSqsLambda.addEventQueue(template, validatedConfig);
+        serverlesseventBridgeSqsLambda.addEventDeadLetterQueue(
           template,
           validatedConfig
         );
-        serverlessSnsSqsLambda.addEventSourceMapping(template, validatedConfig);
-        serverlessSnsSqsLambda.addTopicSubscription(template, validatedConfig);
-        serverlessSnsSqsLambda.addLambdaSqsPermissions(
+        serverlesseventBridgeSqsLambda.addEventSourceMapping(
+          template,
+          validatedConfig
+        );
+        serverlesseventBridgeSqsLambda.addTopicSubscription(
+          template,
+          validatedConfig
+        );
+        serverlesseventBridgeSqsLambda.addLambdaSqsPermissions(
           template,
           validatedConfig
         );
@@ -528,7 +543,10 @@ describe("Test Serverless SNS SQS Lambda", () => {
       serverless.service.provider.stage = "dev-test-provider";
 
       serverless.cli = new CLI(serverless);
-      serverlessSnsSqsLambda = new ServerlessSnsSqsLambda(serverless, options);
+      serverlesseventBridgeSqsLambda = new ServerlesseventBridgeSqsLambda(
+        serverless,
+        options
+      );
     });
 
     describe("when no optional parameters are provided", () => {
@@ -540,21 +558,27 @@ describe("Test Serverless SNS SQS Lambda", () => {
         };
         const testConfig = {
           name: "some-name",
-          topicArn: "arn:aws:sns:us-east-2:123456789012:MyTopic"
+          eventBusArn: "arn:aws:sns:us-east-2:123456789012:MyTopic"
         };
-        const validatedConfig = serverlessSnsSqsLambda.validateConfig(
+        const validatedConfig = serverlesseventBridgeSqsLambda.validateConfig(
           "test-function",
-          serverlessSnsSqsLambda.stage,
+          serverlesseventBridgeSqsLambda.stage,
           testConfig
         );
-        serverlessSnsSqsLambda.addEventQueue(template, validatedConfig);
-        serverlessSnsSqsLambda.addEventDeadLetterQueue(
+        serverlesseventBridgeSqsLambda.addEventQueue(template, validatedConfig);
+        serverlesseventBridgeSqsLambda.addEventDeadLetterQueue(
           template,
           validatedConfig
         );
-        serverlessSnsSqsLambda.addEventSourceMapping(template, validatedConfig);
-        serverlessSnsSqsLambda.addTopicSubscription(template, validatedConfig);
-        serverlessSnsSqsLambda.addLambdaSqsPermissions(
+        serverlesseventBridgeSqsLambda.addEventSourceMapping(
+          template,
+          validatedConfig
+        );
+        serverlesseventBridgeSqsLambda.addTopicSubscription(
+          template,
+          validatedConfig
+        );
+        serverlesseventBridgeSqsLambda.addLambdaSqsPermissions(
           template,
           validatedConfig
         );
@@ -572,22 +596,28 @@ describe("Test Serverless SNS SQS Lambda", () => {
         };
         const testConfig = {
           name: "some-name",
-          topicArn: "arn:aws:sns:us-east-2:123456789012:MyTopic",
+          eventBusArn: "arn:aws:sns:us-east-2:123456789012:MyTopic",
           fifo: true
         };
-        const validatedConfig = serverlessSnsSqsLambda.validateConfig(
+        const validatedConfig = serverlesseventBridgeSqsLambda.validateConfig(
           "test-function",
-          serverlessSnsSqsLambda.stage,
+          serverlesseventBridgeSqsLambda.stage,
           testConfig
         );
-        serverlessSnsSqsLambda.addEventQueue(template, validatedConfig);
-        serverlessSnsSqsLambda.addEventDeadLetterQueue(
+        serverlesseventBridgeSqsLambda.addEventQueue(template, validatedConfig);
+        serverlesseventBridgeSqsLambda.addEventDeadLetterQueue(
           template,
           validatedConfig
         );
-        serverlessSnsSqsLambda.addEventSourceMapping(template, validatedConfig);
-        serverlessSnsSqsLambda.addTopicSubscription(template, validatedConfig);
-        serverlessSnsSqsLambda.addLambdaSqsPermissions(
+        serverlesseventBridgeSqsLambda.addEventSourceMapping(
+          template,
+          validatedConfig
+        );
+        serverlesseventBridgeSqsLambda.addTopicSubscription(
+          template,
+          validatedConfig
+        );
+        serverlesseventBridgeSqsLambda.addLambdaSqsPermissions(
           template,
           validatedConfig
         );
@@ -608,7 +638,10 @@ describe("Test Serverless SNS SQS Lambda", () => {
       const provider = new AwsProvider(serverless);
       serverless.setProvider("aws", provider);
       serverless.cli = new CLI(serverless);
-      serverlessSnsSqsLambda = new ServerlessSnsSqsLambda(serverless, options);
+      serverlesseventBridgeSqsLambda = new ServerlesseventBridgeSqsLambda(
+        serverless,
+        options
+      );
     });
 
     describe("when no optional parameters are provided", () => {
@@ -620,21 +653,27 @@ describe("Test Serverless SNS SQS Lambda", () => {
         };
         const testConfig = {
           name: "some-name",
-          topicArn: "arn:aws:sns:us-east-2:123456789012:MyTopic"
+          eventBusArn: "arn:aws:sns:us-east-2:123456789012:MyTopic"
         };
-        const validatedConfig = serverlessSnsSqsLambda.validateConfig(
+        const validatedConfig = serverlesseventBridgeSqsLambda.validateConfig(
           "test-function",
-          serverlessSnsSqsLambda.stage,
+          serverlesseventBridgeSqsLambda.stage,
           testConfig
         );
-        serverlessSnsSqsLambda.addEventQueue(template, validatedConfig);
-        serverlessSnsSqsLambda.addEventDeadLetterQueue(
+        serverlesseventBridgeSqsLambda.addEventQueue(template, validatedConfig);
+        serverlesseventBridgeSqsLambda.addEventDeadLetterQueue(
           template,
           validatedConfig
         );
-        serverlessSnsSqsLambda.addEventSourceMapping(template, validatedConfig);
-        serverlessSnsSqsLambda.addTopicSubscription(template, validatedConfig);
-        serverlessSnsSqsLambda.addLambdaSqsPermissions(
+        serverlesseventBridgeSqsLambda.addEventSourceMapping(
+          template,
+          validatedConfig
+        );
+        serverlesseventBridgeSqsLambda.addTopicSubscription(
+          template,
+          validatedConfig
+        );
+        serverlesseventBridgeSqsLambda.addLambdaSqsPermissions(
           template,
           validatedConfig
         );
@@ -652,22 +691,28 @@ describe("Test Serverless SNS SQS Lambda", () => {
         };
         const testConfig = {
           name: "some-name",
-          topicArn: "arn:aws:sns:us-east-2:123456789012:MyTopic",
+          eventBusArn: "arn:aws:sns:us-east-2:123456789012:MyTopic",
           fifo: true
         };
-        const validatedConfig = serverlessSnsSqsLambda.validateConfig(
+        const validatedConfig = serverlesseventBridgeSqsLambda.validateConfig(
           "test-function",
-          serverlessSnsSqsLambda.stage,
+          serverlesseventBridgeSqsLambda.stage,
           testConfig
         );
-        serverlessSnsSqsLambda.addEventQueue(template, validatedConfig);
-        serverlessSnsSqsLambda.addEventDeadLetterQueue(
+        serverlesseventBridgeSqsLambda.addEventQueue(template, validatedConfig);
+        serverlesseventBridgeSqsLambda.addEventDeadLetterQueue(
           template,
           validatedConfig
         );
-        serverlessSnsSqsLambda.addEventSourceMapping(template, validatedConfig);
-        serverlessSnsSqsLambda.addTopicSubscription(template, validatedConfig);
-        serverlessSnsSqsLambda.addLambdaSqsPermissions(
+        serverlesseventBridgeSqsLambda.addEventSourceMapping(
+          template,
+          validatedConfig
+        );
+        serverlesseventBridgeSqsLambda.addTopicSubscription(
+          template,
+          validatedConfig
+        );
+        serverlesseventBridgeSqsLambda.addLambdaSqsPermissions(
           template,
           validatedConfig
         );
@@ -688,9 +733,9 @@ describe("Test Serverless SNS SQS Lambda", () => {
             Fn1: {
               events: [
                 {
-                  snsSqs: {
+                  eventBridgeSqs: {
                     name: "Event1",
-                    topicArn: "arn:aws:sns:us-east-2:123456789012:MyTopic"
+                    eventBusArn: "arn:aws:sns:us-east-2:123456789012:MyTopic"
                   }
                 }
               ]
@@ -698,9 +743,9 @@ describe("Test Serverless SNS SQS Lambda", () => {
             Fn2: {
               events: [
                 {
-                  snsSqs: {
+                  eventBridgeSqs: {
                     name: "Event1",
-                    topicArn: "arn:aws:sns:us-east-2:123456789012:MyTopic"
+                    eventBusArn: "arn:aws:sns:us-east-2:123456789012:MyTopic"
                   }
                 }
               ]
@@ -709,22 +754,22 @@ describe("Test Serverless SNS SQS Lambda", () => {
         } as const;
 
         const thunk = () => {
-          serverlessSnsSqsLambda.addSnsSqsResources(
+          serverlesseventBridgeSqsLambda.addeventBridgeSqsResources(
             template,
             "Fn1",
             "unit-test",
-            testCase.functions.Fn1.events[0].snsSqs
+            testCase.functions.Fn1.events[0].eventBridgeSqs
           );
-          serverlessSnsSqsLambda.addSnsSqsResources(
+          serverlesseventBridgeSqsLambda.addeventBridgeSqsResources(
             template,
             "Fn2",
             "unit-test",
-            testCase.functions.Fn2.events[0].snsSqs
+            testCase.functions.Fn2.events[0].eventBridgeSqs
           );
         };
 
         expect(thunk).toThrowErrorMatchingInlineSnapshot(
-          `"Generated logical ID [Event1DeadLetterQueue] already exists in resources definition. Ensure that the snsSqs event definition has a unique name property."`
+          `"Generated logical ID [Event1DeadLetterQueue] already exists in resources definition. Ensure that the eventBridgeSqs event definition has a unique name property."`
         );
       });
     });
@@ -742,10 +787,10 @@ describe("Test Serverless SNS SQS Lambda", () => {
               Fn1: {
                 events: [
                   {
-                    snsSqs: {
+                    eventBridgeSqs: {
                       prefix: "something-really-long-that-puts-it-",
                       name: "over-80-characters-which-is-no-good",
-                      topicArn: "arn:aws:sns:us-east-2:123456789012:MyTopic"
+                      eventBusArn: "arn:aws:sns:us-east-2:123456789012:MyTopic"
                     }
                   }
                 ]
@@ -754,11 +799,11 @@ describe("Test Serverless SNS SQS Lambda", () => {
           } as const;
 
           const thunk = () => {
-            serverlessSnsSqsLambda.addSnsSqsResources(
+            serverlesseventBridgeSqsLambda.addeventBridgeSqsResources(
               template,
               "Fn1",
               "unit-test",
-              testCase.functions.Fn1.events[0].snsSqs
+              testCase.functions.Fn1.events[0].eventBridgeSqs
             );
           };
 
@@ -780,10 +825,10 @@ describe("Test Serverless SNS SQS Lambda", () => {
             Fn1: {
               events: [
                 {
-                  snsSqs: {
+                  eventBridgeSqs: {
                     prefix: "something-really-long-that-puts-it-",
                     name: "over-80-characters-which-is-no-good",
-                    topicArn: "arn:aws:sns:us-east-2:123456789012:MyTopic",
+                    eventBusArn: "arn:aws:sns:us-east-2:123456789012:MyTopic",
                     omitPhysicalId: true
                   }
                 }
@@ -792,11 +837,11 @@ describe("Test Serverless SNS SQS Lambda", () => {
           }
         } as const;
 
-        serverlessSnsSqsLambda.addSnsSqsResources(
+        serverlesseventBridgeSqsLambda.addeventBridgeSqsResources(
           template,
           "Fn1",
           "unit-test",
-          testCase.functions.Fn1.events[0].snsSqs
+          testCase.functions.Fn1.events[0].eventBridgeSqs
         );
 
         const regularQueueName =

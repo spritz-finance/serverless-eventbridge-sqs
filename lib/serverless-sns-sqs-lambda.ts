@@ -1,22 +1,26 @@
 import { JsonObject } from "type-fest";
+import {
+  addResource,
+  isKmsArn,
+  parseIntOr,
+  pascalCase,
+  pascalCaseAllKeys,
+  validateQueueName
+} from "./utils";
 
 // Future work: Properly type the file
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
- * A regular expression that matches AWS KMS arns
- */
-const kmsArnRegex = /^arn:aws:kms:.*:.*:key\/.+$/;
-
-/**
  * Defines the structure of the config object
  * that is passed to the main functions to
  * generate the Serverless template.
  */
+
 type Config = {
   name: string;
-  topicArn: string;
+  eventBusArn: string;
   funcName: string;
   prefix: string;
   batchSize: number;
@@ -29,7 +33,7 @@ type Config = {
   fifo: boolean;
   visibilityTimeout: number;
   rawMessageDelivery: boolean;
-  filterPolicy: any;
+  pattern: any;
   readonly omitPhysicalId: boolean;
 
   mainQueueOverride: JsonObject;
@@ -39,79 +43,8 @@ type Config = {
 };
 
 /**
- * Parse a value into a number or set it to a default value.
- *
- * @param {string|number|null|undefined} intString value possibly in string
- * @param {*} defaultInt the default value if `intString` can't be parsed
- */
-const parseIntOr = (intString, defaultInt) => {
-  if (intString === null || intString === undefined) {
-    return defaultInt;
-  }
-  try {
-    return parseInt(intString.toString(), 10);
-  } catch {
-    return defaultInt;
-  }
-};
-
-/**
- * Converts a string from camelCase to PascalCase. Basically, it just
- * capitalises the first letter.
- *
- * @param {string} camelCase camelCase string
- */
-const pascalCase = (camelCase: string): string =>
-  camelCase.slice(0, 1).toUpperCase() + camelCase.slice(1);
-
-const pascalCaseAllKeys = (jsonObject: JsonObject): JsonObject =>
-  Object.keys(jsonObject).reduce(
-    (acc, key) => ({
-      ...acc,
-      [pascalCase(key)]: jsonObject[key]
-    }),
-    {}
-  );
-
-const validateQueueName = (queueName: string): string => {
-  if (queueName.length > 80) {
-    throw new Error(
-      `Generated queue name [${queueName}] is longer than 80 characters long and may be truncated by AWS, causing naming collisions. Try a shorter prefix or name, or try the hashQueueName config option.`
-    );
-  }
-  return queueName;
-};
-
-/**
- * Returns true if the provided string looks like an KMS ARN, otherwise false
- * @param possibleArn the candidate string
- * @returns true if the provided string looks like a KMS ARN, otherwise false
- */
-const isKmsArn = (possibleArn: string): boolean =>
-  kmsArnRegex.test(possibleArn);
-
-/**
- * Adds a resource block to a template, ensuring uniqueness.
- * @param template the serverless template
- * @param logicalId the logical ID (resource key) for the resource
- * @param resourceDefinition the definition of the resource
- */
-const addResource = (
-  template: any,
-  logicalId: string,
-  resourceDefinition: Record<string, unknown>
-) => {
-  if (logicalId in template.Resources) {
-    throw new Error(
-      `Generated logical ID [${logicalId}] already exists in resources definition. Ensure that the snsSqs event definition has a unique name property.`
-    );
-  }
-  template.Resources[logicalId] = resourceDefinition;
-};
-
-/**
- * The ServerlessSnsSqsLambda plugin looks for functions that contain an
- * `snsSqs` event and adds the necessary resources for the Lambda to subscribe
+ * The ServerlesseventBridgeSqsLambda plugin looks for functions that contain an
+ * `eventBridgeSqs` event and adds the necessary resources for the Lambda to subscribe
  * to the SNS topics with error handling and retry functionality built in.
  *
  * An example configuration might look like:
@@ -120,9 +53,9 @@ const addResource = (
  *       processEvent:
  *         handler: handler.handler
  *         events:
- *           - snsSqs:
+ *           - eventBridgeSqs:
  *             name: ResourcePrefix
- *             topicArn: ${self:custom.topicArn}
+ *             eventBusArn: ${self:custom.eventBusArn}
  *             batchSize: 2
  *             maximumBatchingWindowInSeconds: 30
  *             maxRetryCount: 2
@@ -138,7 +71,7 @@ const addResource = (
  *                 - dog
  *                 - cat
  */
-export default class ServerlessSnsSqsLambda {
+export default class ServerlessEventBridgeSqsLambda {
   serverless: any;
   options: any;
   provider: any;
@@ -151,7 +84,7 @@ export default class ServerlessSnsSqsLambda {
    * @param {*} serverless
    * @param {*} options
    */
-  constructor(serverless, options) {
+  constructor(serverless: any, options: any) {
     this.serverless = serverless;
     this.options = options;
     this.provider = serverless ? serverless.getProvider("aws") : null;
@@ -165,50 +98,54 @@ export default class ServerlessSnsSqsLambda {
       this.serverless.config.stage ||
       this.serverless.service.provider.stage;
 
-    serverless.configSchemaHandler.defineFunctionEvent("aws", "snsSqs", {
-      type: "object",
-      properties: {
-        name: { type: "string" },
-        topicArn: { $ref: "#/definitions/awsArn" },
-        prefix: { type: "string" },
-        omitPhysicalId: { type: "boolean" },
-        batchSize: { type: "number", minimum: 1, maximum: 10000 },
-        maximumBatchingWindowInSeconds: {
-          type: "number",
-          minimum: 0,
-          maximum: 300
+    serverless.configSchemaHandler.defineFunctionEvent(
+      "aws",
+      "eventBridgeSqs",
+      {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          eventBusArn: { $ref: "#/definitions/awsArn" },
+          prefix: { type: "string" },
+          omitPhysicalId: { type: "boolean" },
+          batchSize: { type: "number", minimum: 1, maximum: 10000 },
+          maximumBatchingWindowInSeconds: {
+            type: "number",
+            minimum: 0,
+            maximum: 300
+          },
+          maxRetryCount: { type: "number" },
+          kmsMasterKeyId: {
+            anyOf: [{ type: "string" }, { $ref: "#/definitions/awsArn" }]
+          },
+          kmsDataKeyReusePeriodSeconds: {
+            type: "number",
+            minimum: 60,
+            maximum: 86400
+          },
+          visibilityTimeout: {
+            type: "number",
+            minimum: 0,
+            maximum: 43200
+          },
+          deadLetterMessageRetentionPeriodSeconds: {
+            type: "number",
+            minimum: 60,
+            maximum: 1209600
+          },
+          rawMessageDelivery: { type: "boolean" },
+          enabled: { type: "boolean" },
+          fifo: { type: "boolean" },
+          pattern: { type: "object" },
+          mainQueueOverride: { type: "object" },
+          deadLetterQueueOverride: { type: "object" },
+          eventSourceMappingOverride: { type: "object" },
+          subscriptionOverride: { type: "object" }
         },
-        maxRetryCount: { type: "number" },
-        kmsMasterKeyId: {
-          anyOf: [{ type: "string" }, { $ref: "#/definitions/awsArn" }]
-        },
-        kmsDataKeyReusePeriodSeconds: {
-          type: "number",
-          minimum: 60,
-          maximum: 86400
-        },
-        visibilityTimeout: {
-          type: "number",
-          minimum: 0,
-          maximum: 43200
-        },
-        deadLetterMessageRetentionPeriodSeconds: {
-          type: "number",
-          minimum: 60,
-          maximum: 1209600
-        },
-        rawMessageDelivery: { type: "boolean" },
-        enabled: { type: "boolean" },
-        fifo: { type: "boolean" },
-        filterPolicy: { type: "object" },
-        mainQueueOverride: { type: "object" },
-        deadLetterQueueOverride: { type: "object" },
-        eventSourceMappingOverride: { type: "object" },
-        subscriptionOverride: { type: "object" }
-      },
-      required: ["name", "topicArn"],
-      additionalProperties: false
-    });
+        required: ["name", "eventBusArn"],
+        additionalProperties: false
+      }
+    );
 
     if (!this.provider) {
       throw new Error("This plugin must be used with AWS");
@@ -234,17 +171,19 @@ export default class ServerlessSnsSqsLambda {
       const func = functions[funcKey];
       if (func.events) {
         func.events.forEach(event => {
-          if (event.snsSqs) {
+          if (event.eventBridgeSqs) {
             if (this.options.verbose) {
               console.info(
-                `Adding snsSqs event handler [${JSON.stringify(event.snsSqs)}]`
+                `Adding eventBridgeSqs event handler [${JSON.stringify(
+                  event.eventBridgeSqs
+                )}]`
               );
             }
-            this.addSnsSqsResources(
+            this.addEventBridgeSqsResources(
               template,
               funcKey,
               this.stage,
-              event.snsSqs
+              event.eventBridgeSqs
             );
           }
         });
@@ -257,11 +196,11 @@ export default class ServerlessSnsSqsLambda {
    * @param {object} template the template which gets mutated
    * @param {string} funcName the name of the function from serverless config
    * @param {string} stage the stage name from the serverless config
-   * @param {object} snsSqsConfig the configuration values from the snsSqs
+   * @param {object} eventBridgeSqsConfig the configuration values from the eventBridgeSqs
    *  event portion of the serverless function config
    */
-  addSnsSqsResources(template, funcName, stage, snsSqsConfig) {
-    const config = this.validateConfig(funcName, stage, snsSqsConfig);
+  addEventBridgeSqsResources(template, funcName, stage, eventBridgeSqsConfig) {
+    const config = this.validateConfig(funcName, stage, eventBridgeSqsConfig);
 
     [
       this.addEventSourceMapping,
@@ -283,16 +222,16 @@ export default class ServerlessSnsSqsLambda {
    *
    * @param {string} funcName the name of the function from serverless config
    * @param {string} stage the stage name from the serverless config
-   * @param {object} config the configuration values from the snsSqs event
+   * @param {object} config the configuration values from the eventBridgeSqs event
    *  portion of the serverless function config
    */
   validateConfig(funcName, stage, config): Config {
-    if (!config.topicArn || !config.name) {
+    if (!config.eventBusArn || !config.name) {
       throw new Error(`Error:
-When creating an snsSqs handler, you must define the name and topicArn.
+When creating an eventBridgeSqs handler, you must define the name and eventBusArn.
 In function [${funcName}]:
 - name was [${config.name}]
-- topicArn was [${config.topicArn}].
+- eventBusArn was [${config.eventBusArn}].
 
 Usage
 -----
@@ -301,9 +240,9 @@ Usage
     processEvent:
       handler: handler.handler
       events:
-        - snsSqs:
+        - eventBridgeSqs:
             name: Event                                      # required
-            topicArn: !Ref TopicArn                          # required
+            eventBusArn: !Ref eventBusArn                          # required
             prefix: some-prefix                              # optional - default is \`\${this.serviceName}-\${stage}-\${funcNamePascalCase}\`
             maxRetryCount: 2                                 # optional - default is 5
             batchSize: 1                                     # optional - default is 10
@@ -315,7 +254,7 @@ Usage
             fifo: false                                      # optional - AWS default is false
             visibilityTimeout: 30                            # optional - AWS default is 30 seconds
             rawMessageDelivery: false                        # optional - default is false
-            filterPolicy:
+            pattern:
               pet:
                 - dog
                 - cat
@@ -515,10 +454,10 @@ Usage
    * Add a policy allowing the queue to subscribe to the SNS topic.
    *
    * @param {object} template the template which gets mutated
-   * @param {{name, prefix, topicArn}} config including name of the queue, the
+   * @param {{name, prefix, eventBusArn}} config including name of the queue, the
    *  resource prefix and the arn of the topic
    */
-  addEventQueuePolicy(template, { name, prefix, topicArn }: Config) {
+  addEventQueuePolicy(template, { name, prefix, eventBusArn }: Config) {
     addResource(template, `${name}QueuePolicy`, {
       Type: "AWS::SQS::QueuePolicy",
       Properties: {
@@ -532,7 +471,7 @@ Usage
               Principal: { Service: "sns.amazonaws.com" },
               Action: "SQS:SendMessage",
               Resource: { "Fn::GetAtt": [`${name}Queue`, "Arn"] },
-              Condition: { ArnEquals: { "aws:SourceArn": [topicArn] } }
+              Condition: { ArnEquals: { "aws:SourceArn": [eventBusArn] } }
             }
           ]
         },
@@ -545,15 +484,15 @@ Usage
    * Subscribe the newly created queue to the desired topic.
    *
    * @param {object} template the template which gets mutated
-   * @param {{name, topicArn, filterPolicy}} config including name of the queue,
+   * @param {{name, eventBusArn, pattern}} config including name of the queue,
    *  the arn of the topic and the filter policy for the subscription
    */
   addTopicSubscription(
     template,
     {
       name,
-      topicArn,
-      filterPolicy,
+      eventBusArn,
+      pattern,
       rawMessageDelivery,
       subscriptionOverride
     }: Config
@@ -563,8 +502,8 @@ Usage
       Properties: {
         Endpoint: { "Fn::GetAtt": [`${name}Queue`, "Arn"] },
         Protocol: "sqs",
-        TopicArn: topicArn,
-        ...(filterPolicy ? { FilterPolicy: filterPolicy } : {}),
+        eventBusArn: eventBusArn,
+        ...(pattern ? { Pattern: pattern } : {}),
         ...(rawMessageDelivery !== undefined
           ? {
               RawMessageDelivery: rawMessageDelivery
