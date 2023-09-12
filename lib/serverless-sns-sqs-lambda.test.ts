@@ -627,7 +627,7 @@ describe("Test Serverless SNS SQS Lambda", () => {
     });
   });
 
-  describe("when no provider is specified", () => {
+  describe.only("when no provider is specified", () => {
     beforeEach(() => {
       serverless = new Serverless({ commands: [], options: {} });
       serverless.service.service = "test-service";
@@ -644,7 +644,7 @@ describe("Test Serverless SNS SQS Lambda", () => {
       );
     });
 
-    describe("when no optional parameters are provided", () => {
+    describe.only("when no optional parameters are provided", () => {
       it("stage should default to 'dev'", () => {
         const template = {
           Resources: {

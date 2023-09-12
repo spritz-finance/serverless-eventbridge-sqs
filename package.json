@@ -1,6 +1,6 @@
 {
-  "name": "@agiledigital/serverless-eventbridge-sqs-lambda",
-  "version": "2.0.1",
+  "name": "@spritz/eventbridge-sqs",
+  "version": "0.0.1",
   "description": "serverless plugin to make serverless-eventbridge-sqs-lambda events",
   "main": "dist/index.js",
   "scripts": {
