@@ -17,7 +17,7 @@ functions:
           method: get
           path: /whatever
       - eventBridgeSqs:
-          eventBus: arn:aws:events:${aws:region}:${aws:accountId}:event-bus/events-staging
+          eventBus: arn:aws:events:${aws:region}:${aws:accountId}:event-bus/events-${sls:stage}
           eventPattern:
             source:
               - whatever
@@ -29,10 +29,9 @@ functions:
     handler: handler.handler
     events:
       - eventBridgeSqs:
-          eventBus: arn:aws:events:${aws:region}:${aws:accountId}:event-bus/events-staging
+          eventBus: arn:aws:events:${aws:region}:${aws:accountId}:event-bus/events-${sls:stage}
           eventPattern:
             detail-type:
               - user.login
-
       - eventBridgeSqs:
-          eventBus: arn:aws:events:${aws:region}:${aws:accountId}:event-bus/events-staging
+          eventBus: arn:aws:events:${aws:region}:${aws:accountId}:event-bus/events-${sls:stage}
