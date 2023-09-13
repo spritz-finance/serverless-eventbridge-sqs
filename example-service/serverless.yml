@@ -1,85 +1,38 @@
-service: sns-sqs-service
-# Ensure validation issues are treated as errors
-configValidationMode: error
-frameworkVersion: "3"
+service: plugin-test
+
+plugins:
+  - ../dist
 
 provider:
   name: aws
-  runtime: nodejs14.x
-  region: ap-southeast-2
+  runtime: nodejs16.x
+  region: us-east-1
   stage: ${opt:stage, 'dev'}
 
-custom:
-  topicArn: !Ref Topic
-
 functions:
-  processEvent:
+  HandlerA:
     handler: handler.handler
     events:
-      - snsSqs:
-          name: ResourcePrefix
-          topicArn: ${self:custom.topicArn}
-          omitPhysicalId: true
-          batchSize: 2
-          maximumBatchingWindowInSeconds: 30
-          maxRetryCount: 2
-          kmsMasterKeyId: !GetAtt SQSQueueKey.Arn
-          kmsDataKeyReusePeriodSeconds: 600
-          visibilityTimeout: 120
-          rawMessageDelivery: true
-          # filterPolicy:
-          #   pet:
-          #     - dog
-          #     - cat
+      - http:
+          method: get
+          path: /whatever
+      - eventBridgeSqs:
+          eventBus: arn:aws:events:${aws:region}:${aws:accountId}:event-bus/events-staging
+          eventPattern:
+            source:
+              - whatever
+            detail-type:
+              - something.happened
+              - somethingElse.alsoHappened
 
-          # Overrides for generated CloudFormation templates
-          # Mirrors the CloudFormation docs but uses camel case instead of title case
-          #
-          #
-          # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-sqs-queues.html
-          mainQueueOverride:
-            maximumMessageSize: 1024
-          deadLetterQueueOverride:
-            delaySeconds: 120
-          # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-eventsourcemapping.html
-          eventSourceMappingOverride:
-            enabled: true
-          # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-sns-subscription.html
-          subscriptionOverride:
-            rawMessageDelivery: true
+  HandlerB:
+    handler: handler.handler
+    events:
+      - eventBridgeSqs:
+          eventBus: arn:aws:events:${aws:region}:${aws:accountId}:event-bus/events-staging
+          eventPattern:
+            detail-type:
+              - user.login
 
-resources:
-  Resources:
-    Topic:
-      Type: AWS::SNS::Topic
-      Properties:
-        TopicName: TestTopic
-    # To allow SNS to push messages to an encrypted queue, a CMK must be used
-    SQSQueueKey:
-      Type: AWS::KMS::Key
-      Properties:
-        KeyPolicy:
-          Version: "2012-10-17"
-          Id: key-default-1
-          Statement:
-            - Sid: Enable IAM User Permissions
-              Effect: Allow
-              Principal:
-                AWS: !Join
-                  - ""
-                  - - "arn:aws:iam::"
-                    - !Ref "AWS::AccountId"
-                    - ":root"
-              Action: "kms:*"
-              Resource: "*"
-            - Sid: Allow SNS publish to SQS
-              Effect: Allow
-              Principal:
-                Service: sns.amazonaws.com
-              Action:
-                - kms:GenerateDataKey
-                - kms:Decrypt
-              Resource: "*"
-
-plugins:
-  - "@agiledigital/serverless-sns-sqs-lambda"
+      - eventBridgeSqs:
+          eventBus: arn:aws:events:${aws:region}:${aws:accountId}:event-bus/events-staging

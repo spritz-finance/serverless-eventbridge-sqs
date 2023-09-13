@@ -1,3 +1,3 @@
 module.exports.handler = async event => {
-  console.dir(event, { depth: null });
+  console.log('got event', JSON.stringify(event))
 };
