@@ -1,0 +1,38 @@
+service: plugin-test
+
+plugins:
+  - ../dist
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+
+functions:
+  HandlerA:
+    handler: handler.handler
+    events:
+      - http:
+          method: get
+          path: /whatever
+      - eventBridgeSqs:
+          eventBus: arn:aws:events:${aws:region}:${aws:accountId}:event-bus/events-staging
+          eventPattern:
+            source:
+              - whatever
+            detail-type:
+              - something.happened
+              - somethingElse.alsoHappened
+
+  HandlerB:
+    handler: handler.handler
+    events:
+      - eventBridgeSqs:
+          eventBus: arn:aws:events:${aws:region}:${aws:accountId}:event-bus/events-staging
+          eventPattern:
+            detail-type:
+              - user.login
+
+      - eventBridgeSqs:
+          eventBus: arn:aws:events:${aws:region}:${aws:accountId}:event-bus/events-staging

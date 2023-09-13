@@ -1,0 +1,51 @@
+{
+  "name": "@spritz/eventbridge-sqs",
+  "version": "0.0.1",
+  "description": "serverless plugin to make serverless-eventbridge-sqs-lambda events",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "yarn build && eslint lib/**/*.ts && jest --clearCache lib && jest --runInBand lib integration-tests",
+    "format": "prettier --ignore-path .gitignore --write . !**.md",
+    "format-check": "prettier --ignore-path .gitignore --check . !**.md",
+    "build": "tsc",
+    "prepack": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spritz-finance/serverless-eventbridge-sqs.git"
+  },
+  "homepage": "https://github.com/spritz-finance/serverless-eventbridge-sqs#readme",
+  "keywords": [
+    "serverless",
+    "sls",
+    "eventbridge",
+    "sqs",
+    "aws",
+    "lambda"
+  ],
+  "author": "Spritz Finance",
+  "license": "MIT",
+  "devDependencies": {
+    "@serverless/test": "^11.1.1",
+    "@types/jest": "^29.5.4",
+    "@typescript-eslint/eslint-plugin": "^6.7.0",
+    "@typescript-eslint/parser": "^6.7.0",
+    "eslint": "^8.49.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "jest": "^29.6.4",
+    "prettier": "^3.0.3",
+    "serverless": "^3.34.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.2.2"
+  },
+  "peerDependencies": {
+    "serverless": "3.x"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ]
+}

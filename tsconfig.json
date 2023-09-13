@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "es2018",
+    "module": "commonjs",
+    "lib": ["es2020", "esnext.asynciterable"],
+    "moduleResolution": "node",
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": true,
+    "noImplicitAny": false,
+    "removeComments": true,
+    "sourceMap": true,
+    "types": ["jest", "node"],
+    "resolveJsonModule": true,
+    "outDir": "dist"
+  },
+  "ts-node": {
+    "files": true
+  },
+  "include": ["lib/**/*.ts"],
+  "exclude": ["node_modules/**/*"]
+}

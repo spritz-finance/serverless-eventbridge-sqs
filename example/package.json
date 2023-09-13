@@ -1,0 +1,19 @@
+{
+  "name": "test-service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "serverless package --verbose"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "serverless": "^3.34.0"
+  },
+  "dependencies": {
+    "uuid": "^9.0.1"
+  }
+}
