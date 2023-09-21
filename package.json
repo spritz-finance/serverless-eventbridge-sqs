@@ -1,6 +1,6 @@
 {
   "name": "@spritz-finance/serverless-eventbridge-sqs",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "serverless plugin to make serverless-eventbridge-sqs-lambda events",
   "main": "dist/index.js",
   "scripts": {

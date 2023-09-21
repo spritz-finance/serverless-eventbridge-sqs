@@ -22,7 +22,7 @@ plugins:
 
 ## Setup
 
-To complete the setup, configure your Lambda function with the eventBridgeSqs event type in your serverless.yml file. Below is an example that illustrates how to set up the function with various options:
+To complete the setup, configure your Lambda function with the eventBridgeSqs event type in your serverless.yml file. Below is an example that illustrates how to set up the function with various options. Note that all settings are optional
 
 ```yml
 functions:
@@ -30,12 +30,24 @@ functions:
     handler: handler.handler
     events:
       - eventBridgeSqs:
-          eventBus: MyEventBusARN  # Optional: Defaults to listening on the default event bus
-          eventPattern:  # Optional: Defaults to listening to all events
+          # EventBridge settings
+          eventBus: MyEventBusARN # Defaults to listening on the default event bus
+          eventPattern: # Defaults to listening to all events
             detail-type:
               - user.login
-          batchSize: 1  # Optional: The default batch size is 1
-          visibilityTimeout: 120  # Optional: Time in seconds (AWS default is 30 secs)
+          inputTransformer: # Transform the incoming event data
+            inputTemplate: '{"newAttribute": "$.oldAttribute"}'
+
+          # SQS settings
+          batchSize: 1 # The default batch size is 1
+          visibilityTimeout: 120 # AWS default is 30 secs
+          messageRetentionPeriod: 345600 # 4 days in seconds
+          delaySeconds: 10 # Initial delay before delivering the message. Default is 0
+          redrivePolicy: # Integrate with a Dead Letter Queue
+            deadLetterTargetArn: MyDLQARN
+          encryption: # Enable encryption for messages
+            kmsMasterKeyId: alias/aws/sqs
+            kmsDataKeyReusePeriodSeconds: 600
 
 plugins:
   - "@spritz-finance/serverless-eventbridge-sqs"
