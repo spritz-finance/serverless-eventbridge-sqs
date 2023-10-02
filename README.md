@@ -31,7 +31,7 @@ functions:
     events:
       - eventBridgeSqs:
           eventBus: MyEventBusARN # Optional - by default will listen to the default bus
-          eventPattern: # Optional - by default will listen to all events
+          pattern: # Optional - by default will listen to all events
             detail-type:
               - user.login
           batchSize: 1 # optional - default value is 1

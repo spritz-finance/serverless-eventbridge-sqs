@@ -1,6 +1,6 @@
 {
   "name": "@spritz/eventbridge-sqs",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "description": "serverless plugin to make serverless-eventbridge-sqs-lambda events",
   "main": "dist/index.js",
   "scripts": {
@@ -23,7 +23,7 @@
     "aws",
     "lambda"
   ],
-  "author": "Spritz Finance",
+  "author": "Eliyahu Gusovsky",
   "license": "MIT",
   "devDependencies": {
     "@serverless/test": "^11.1.1",

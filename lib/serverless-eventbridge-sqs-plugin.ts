@@ -5,7 +5,7 @@ type Options = any;
 
 type EventConfig = {
   eventBus?: string;
-  eventPattern?: any;
+  pattern?: any;
   visibilityTimeout?: number;
   batchSize?: number;
 };
@@ -61,7 +61,7 @@ class ServerlessEventBridgeSqsPlugin {
         type: "object",
         properties: {
           eventBus: { type: "string" },
-          eventPattern: { type: "object" },
+          pattern: { type: "object" },
           visibilityTimeout: { type: "number" },
           batchSize: { type: "number" },
         },
@@ -144,7 +144,7 @@ class ServerlessEventBridgeSqsPlugin {
     addResource(args.template, ruleName, {
       Type: "AWS::Events::Rule",
       Properties: {
-        EventPattern: args.eventConfig.eventPattern ?? DEFAULT_EVENT_PATTERN,
+        EventPattern: args.eventConfig.pattern ?? DEFAULT_EVENT_PATTERN,
         ...(args.eventConfig.eventBus !== undefined
           ? {
               EventBusName: args.eventConfig.eventBus,
