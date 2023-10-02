@@ -1,28 +1,28 @@
 # Serverless Eventbridge Sqs Lambda
 
-This is a servless plugin which allows you to subscribe a lambda to an SQS queue which is driven by an EventBridge event
+Introducing an SQS interface between AWS EventBridge and Lambda, as facilitated by this plugin, which enhances system resilience. While EventBridge alone can trigger Lambda functions, it lacks SQS's built-in capabilities for message buffering, deduplication, and fault tolerance. Without SQS, you're reliant solely on Lambda’s limited retry mechanisms. By using this plugin, you ensure that your architecture can gracefully handle surges in events and more effectively manage event-processing failures, making your serverless applications both scalable and robust.
 
 # Table of Contents
 
 - [Install](#install)
 - [Setup](#setup)
 
-## Install
+## Installation
 
-Run `npm install` in your Serverless project.
+Install the plugin in the root directory of your Serverless project with the following npm command:
 
-`$ npm install --save-dev @spritz/eventbridge-sqs`
+`$ npm install --save-dev @spritz-finance/serverless-eventbridge-sqs`
 
-Add the plugin to your serverless.yml file
+Next, incorporate the plugin into your serverless.yml file as demonstrated below:
 
 ```yml
 plugins:
-  - "@spritz/eventbridge-sqs"
+  - "@spritz-finance/serverless-eventbridge-sqs"
 ```
 
 ## Setup
 
-Provide the lambda function with the eventBridgeSqs event
+To complete the setup, configure your Lambda function with the eventBridgeSqs event type in your serverless.yml file. Below is an example that illustrates how to set up the function with various options. Note that all settings are optional
 
 ```yml
 functions:
@@ -30,13 +30,27 @@ functions:
     handler: handler.handler
     events:
       - eventBridgeSqs:
-          eventBus: MyEventBusARN # Optional - by default will listen to the default bus
-          pattern: # Optional - by default will listen to all events
+          # EventBridge settings
+          eventBus: MyEventBusARN # Defaults to listening on the default event bus
+          eventPattern: # Defaults to listening to all events
             detail-type:
               - user.login
-          batchSize: 1 # optional - default value is 1
-          visibilityTimeout: 120 # optional (in seconds) - AWS default is 30 secs
+          inputTransformer: # Transform the incoming event data
+            inputTemplate: '{"newAttribute": "$.oldAttribute"}'
+
+          # SQS settings
+          batchSize: 1 # The default batch size is 1
+          visibilityTimeout: 120 # AWS default is 30 secs
+          messageRetentionPeriod: 345600 # 4 days in seconds
+          delaySeconds: 10 # Initial delay before delivering the message. Default is 0
+          redrivePolicy: # Integrate with a Dead Letter Queue
+            deadLetterTargetArn: MyDLQARN
+          encryption: # Enable encryption for messages
+            kmsMasterKeyId: alias/aws/sqs
+            kmsDataKeyReusePeriodSeconds: 600
 
 plugins:
-  - "@spritz/eventbridge-sqs"
+  - "@spritz-finance/serverless-eventbridge-sqs"
 ```
+
+The above configuration shows that the processEvent Lambda function is subscribed to an SQS queue that listens for events on the `MyEventBusARN` event bus. The function filters these events with a `detail-type` of `user.login`. Moreover, it sets a batch size of 1 and a visibility timeout of 120 seconds for processed messages.

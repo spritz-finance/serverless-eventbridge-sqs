@@ -5,9 +5,14 @@ type Options = any;
 
 type EventConfig = {
   eventBus?: string;
-  pattern?: any;
+  eventPattern?: any;
+  inputTransformer?: any;
   visibilityTimeout?: number;
   batchSize?: number;
+  messageRetentionPeriod?: number;
+  delaySeconds?: number;
+  redrivePolicy?: any;
+  encryption?: any;
 };
 
 type ResourcesArg = {
@@ -64,6 +69,11 @@ class ServerlessEventBridgeSqsPlugin {
           pattern: { type: "object" },
           visibilityTimeout: { type: "number" },
           batchSize: { type: "number" },
+          inputTransformer: { type: "object" },
+          messageRetentionPeriod: { type: "number" },
+          delaySeconds: { type: "number" },
+          redrivePolicy: { type: "object" },
+          encryption: { type: "object" },
         },
         required: [],
         additionalProperties: false,
@@ -131,6 +141,28 @@ class ServerlessEventBridgeSqsPlugin {
               VisibilityTimeout: args.eventConfig.visibilityTimeout,
             }
           : {}),
+        ...(args.eventConfig.messageRetentionPeriod !== undefined
+          ? {
+              MessageRetentionPeriod: args.eventConfig.messageRetentionPeriod,
+            }
+          : {}),
+        ...(args.eventConfig.delaySeconds !== undefined
+          ? {
+              DelaySeconds: args.eventConfig.delaySeconds,
+            }
+          : {}),
+        ...(args.eventConfig.redrivePolicy !== undefined
+          ? {
+              RedrivePolicy: args.eventConfig.redrivePolicy,
+            }
+          : {}),
+        ...(args.eventConfig.encryption !== undefined
+          ? {
+              KmsMasterKeyId: args.eventConfig.encryption.kmsMasterKeyId,
+              KmsDataKeyReusePeriodSeconds:
+                args.eventConfig.encryption.kmsDataKeyReusePeriodSeconds,
+            }
+          : {}),
       },
     });
   }
@@ -141,7 +173,7 @@ class ServerlessEventBridgeSqsPlugin {
   addEventRule(args: ResourcesArg): void {
     const ruleName = getResourceName(args, "EventRule");
     const queueName = getQueueName(args);
-    addResource(args.template, ruleName, {
+    const ruleProperties: any = {
       Type: "AWS::Events::Rule",
       Properties: {
         EventPattern: args.eventConfig.pattern ?? DEFAULT_EVENT_PATTERN,
@@ -154,9 +186,19 @@ class ServerlessEventBridgeSqsPlugin {
           {
             Arn: { "Fn::GetAtt": [queueName, "Arn"] },
             Id: `${ruleName}Target`,
+            ...(args.eventConfig.inputTransformer !== undefined
+              ? {
+                  InputTransformer: args.eventConfig.inputTransformer,
+                }
+              : {}),
           },
         ],
       },
+    };
+
+    addResource(args.template, getResourceName(args, "EventRule"), {
+      Type: "AWS::Events::Rule",
+      Properties: ruleProperties,
     });
   }
 
