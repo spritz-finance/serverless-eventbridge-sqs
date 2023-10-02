@@ -32,7 +32,7 @@ functions:
       - eventBridgeSqs:
           # EventBridge settings
           eventBus: MyEventBusARN # Defaults to listening on the default event bus
-          eventPattern: # Defaults to listening to all events
+          pattern: # Defaults to listening to all events
             detail-type:
               - user.login
           inputTransformer: # Transform the incoming event data

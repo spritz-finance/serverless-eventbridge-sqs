@@ -5,7 +5,7 @@ type Options = any;
 
 type EventConfig = {
   eventBus?: string;
-  eventPattern?: any;
+  pattern?: any;
   inputTransformer?: any;
   visibilityTimeout?: number;
   batchSize?: number;

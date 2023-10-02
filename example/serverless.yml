@@ -18,7 +18,7 @@ functions:
           path: /whatever
       - eventBridgeSqs:
           eventBus: arn:aws:events:${aws:region}:${aws:accountId}:event-bus/events-staging
-          eventPattern:
+          pattern:
             source:
               - whatever
             detail-type:
@@ -30,7 +30,7 @@ functions:
     events:
       - eventBridgeSqs:
           eventBus: arn:aws:events:${aws:region}:${aws:accountId}:event-bus/events-staging
-          eventPattern:
+          pattern:
             detail-type:
               - user.login
 
