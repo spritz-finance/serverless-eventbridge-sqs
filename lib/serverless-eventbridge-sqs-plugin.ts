@@ -174,26 +174,23 @@ class ServerlessEventBridgeSqsPlugin {
     const ruleName = getResourceName(args, "EventRule");
     const queueName = getQueueName(args);
     const ruleProperties: any = {
-      Type: "AWS::Events::Rule",
-      Properties: {
-        EventPattern: args.eventConfig.pattern ?? DEFAULT_EVENT_PATTERN,
-        ...(args.eventConfig.eventBus !== undefined
-          ? {
-              EventBusName: args.eventConfig.eventBus,
-            }
-          : {}),
-        Targets: [
-          {
-            Arn: { "Fn::GetAtt": [queueName, "Arn"] },
-            Id: `${ruleName}Target`,
-            ...(args.eventConfig.inputTransformer !== undefined
-              ? {
-                  InputTransformer: args.eventConfig.inputTransformer,
-                }
-              : {}),
-          },
-        ],
-      },
+      EventPattern: args.eventConfig.pattern ?? DEFAULT_EVENT_PATTERN,
+      ...(args.eventConfig.eventBus !== undefined
+        ? {
+            EventBusName: args.eventConfig.eventBus,
+          }
+        : {}),
+      Targets: [
+        {
+          Arn: { "Fn::GetAtt": [queueName, "Arn"] },
+          Id: `${ruleName}Target`,
+          ...(args.eventConfig.inputTransformer !== undefined
+            ? {
+                InputTransformer: args.eventConfig.inputTransformer,
+              }
+            : {}),
+        },
+      ],
     };
 
     addResource(args.template, getResourceName(args, "EventRule"), {
